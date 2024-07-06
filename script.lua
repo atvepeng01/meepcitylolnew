@@ -95,8 +95,24 @@ local Button = Tab:CreateButton({
    end,
 })
 
+local Button = Tab:CreateButton({
+   Name = "Infinite-Yield",
+   Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "добавить себя в друзя",
+   Callback = function()
+        game:GetService("ReplicatedStorage").Connection:InvokeServer(158,3,game.Players.LocalPlayer.UserId)
+   end,
+})
+
 while wait() do 
     Paragraph:Set({Title = "My Coins", Content = game.Players.LocalPlayer:GetAttribute("Coins")})
 end
+
+
 
 Rayfield:LoadConfiguration()
