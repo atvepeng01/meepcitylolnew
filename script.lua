@@ -18,7 +18,29 @@ function AntiSpamBallone()
                 object:Destroy()
             end
         end
-        wait()
+        task.wait()
+    end
+end
+
+_G.SpamBallone = true
+
+function SpamBallone() 
+    while _G.SpamBallone == true do
+        game:GetService("ReplicatedStorage").Connection:InvokeServer(201, 1311, {})
+        game:GetService("ReplicatedStorage").Connection:InvokeServer(202)
+
+        game:GetService("ReplicatedStorage").Connection:InvokeServer(201, 1312, {})
+        game:GetService("ReplicatedStorage").Connection:InvokeServer(202)
+
+        game:GetService("ReplicatedStorage").Connection:InvokeServer(201, 1313, {})
+        game:GetService("ReplicatedStorage").Connection:InvokeServer(202)
+
+        game:GetService("ReplicatedStorage").Connection:InvokeServer(201, 1314, {})
+        game:GetService("ReplicatedStorage").Connection:InvokeServer(202)
+
+        game:GetService("ReplicatedStorage").Connection:InvokeServer(201, 1315, {})
+        game:GetService("ReplicatedStorage").Connection:InvokeServer(202)
+        task.wait()
     end
 end
 
@@ -505,6 +527,18 @@ local Toggle = AntiSpam:CreateToggle({
    Callback = function(Value)
         _G.AntiSpamBallone = Value 
         AntiSpamBallone()
+   end,
+})
+
+local Spam = Window:CreateTab("Spam")
+
+local Toggle = Spam:CreateToggle({
+   Name = "Spam Ballone",
+   CurrentValue = false,
+   Flag = "Toggle1", 
+   Callback = function(Value)
+        _G.SpamBallone = Value 
+        SpamBallone()
    end,
 })
 
