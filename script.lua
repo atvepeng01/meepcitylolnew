@@ -9,6 +9,19 @@ local Window = Rayfield:CreateWindow({
     LoadingSubtitle = "by atvepeng01",
 })
 
+_G.AntiSpamBallone = true
+
+function AntiSpamBallone() 
+    while _G.AntiSpamBallone == true do 
+        for _, object in ipairs(game.Workspace:GetChildren()) do
+            if object.Name == "Balloon" then 
+                object:Destroy()
+            end
+        end
+        wait()
+    end
+end
+
 _G.AutoFarm = true
 
 function AutoFarm() 
@@ -23,6 +36,68 @@ function AutoFarm()
         game:GetService("ReplicatedStorage").Connection:InvokeServer(49)
         game:GetService("ReplicatedStorage").Connection:InvokeServer(51)
         wait(1)
+    end
+end
+
+_G.SafeAutoFarm = true
+
+function SafeAutoFarm() 
+    while _G.SafeAutoFarm == true do local player = game.Players.LocalPlayer
+        local rootPart = player.Character:WaitForChild("HumanoidRootPart")
+
+        local function findClosestTempFish()
+            local closestObject = nil
+            local closestDistance = math.huge 
+
+            for _, obj in ipairs(workspace.VW:GetChildren()) do
+                if obj.Name == "TempFish" then
+                    local distance = (obj.Position - rootPart.Position).Magnitude
+                    if distance < closestDistance then
+                        closestDistance = distance
+                        closestObject = obj
+                    end
+                end
+            end
+            return closestObject
+        end
+
+        local closestObject = findClosestTempFish()
+
+        if closestObject then
+            local replicatedStorage = game:GetService("ReplicatedStorage")
+            replicatedStorage.Connection:InvokeServer(11, {
+                ["Power"] = 1,
+                ["FishingZonePos"] = closestObject.Position,
+                ["Face"] = Vector3.new(0, 0, 0),
+                ["PlayerPos"] = closestObject.Position,
+                ["FishingPolePos"] = closestObject.Position,
+            })
+            replicatedStorage.Connection:InvokeServer(49)
+            replicatedStorage.Connection:InvokeServer(51)
+        end
+        wait(1)
+    end
+end
+
+_G.FanAutoFarm = true
+
+function FanAutoFarm() 
+    while _G.FanAutoFarm == true do
+        local playerName = game.Players.LocalPlayer.PlayerGui.PlayerDialogGui.Container.PlayerHeader.PlayerUsername.Text:gsub("@", "")
+        local player = game.Players:FindFirstChild(playerName).Character.Head.Position
+
+        if player then
+            game:GetService("ReplicatedStorage").Connection:InvokeServer(11,{
+                ["Power"] = 1,
+                ["FishingZonePos"] = player,
+                ["Face"] =  Vector3.new(0,0,0),
+                ["PlayerPos"] = player,
+                ["FishingPolePos"] = player,
+            })
+            game:GetService("ReplicatedStorage").Connection:InvokeServer(49)
+            game:GetService("ReplicatedStorage").Connection:InvokeServer(51)
+            wait()
+        end
     end
 end
 
@@ -262,6 +337,28 @@ local Button = Avatar:CreateButton({ -- Use Avatar as the tab reference
     end,
 })
 
+local Button = Avatar:CreateButton({
+   Name = "Normal Size",
+   Callback = function()    
+    game:GetService("ReplicatedStorage"):WaitForChild("FunctionConnections"):WaitForChild("NewAERequestSetCheesyEffect"):InvokeServer(1,true)
+   end,
+})
+
+local Button = Avatar:CreateButton({
+   Name = "Kid Size",
+   Callback = function()    
+    game:GetService("ReplicatedStorage"):WaitForChild("FunctionConnections"):WaitForChild("NewAERequestSetCheesyEffect"):InvokeServer(2,true)
+   end,
+})
+
+local Button = Avatar:CreateButton({
+   Name = "Teem Size",
+   Callback = function()    
+    game:GetService("ReplicatedStorage"):WaitForChild("FunctionConnections"):WaitForChild("NewAERequestSetCheesyEffect"):InvokeServer(3,true)
+   end,
+})
+
+
 local Tab = Window:CreateTab("AutoFarm")
 
 local Toggle = Tab:CreateToggle({
@@ -271,6 +368,26 @@ local Toggle = Tab:CreateToggle({
    Callback = function(Value)
         _G.AutoFarm = Value 
         AutoFarm()
+   end,
+})
+
+local Toggle = Tab:CreateToggle({
+   Name = "SafeAutoFarm",
+   CurrentValue = false,
+   Flag = "Toggle1",
+   Callback = function(Value)
+        _G.SafeAutoFarm = Value 
+        SafeAutoFarm()
+   end,
+})
+
+local Toggle = Tab:CreateToggle({
+   Name = "FanAutoFarm",
+   CurrentValue = false,
+   Flag = "Toggle1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Value)
+        _G.FanAutoFarm = Value 
+        FanAutoFarm()
    end,
 })
 
@@ -378,6 +495,19 @@ local Button = Visuals:CreateButton({
         game.Players.atvepeng01.PlayerGui.MainGui.CoinsContainer.ButtonBuyCoins.Visible = false
    end,
 })
+
+local AntiSpam = Window:CreateTab("AntiSpam")
+
+local Toggle = AntiSpam:CreateToggle({
+   Name = "Anti Spam Ballone",
+   CurrentValue = false,
+   Flag = "Toggle1", 
+   Callback = function(Value)
+        _G.AntiSpamBallone = Value 
+        AntiSpamBallone()
+   end,
+})
+
 
 local Dev = Window:CreateTab("Dev")
 
