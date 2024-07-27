@@ -97,7 +97,7 @@ function SafeAutoFarm()
             replicatedStorage.Connection:InvokeServer(49)
             replicatedStorage.Connection:InvokeServer(51)
         end
-        wait(1)
+        task.wait()
     end
 end
 
@@ -129,6 +129,23 @@ function UnVisibleButtonServerBrowser()
     while _G.UnVisibleButtonServerBrowser == true do 
         game.Players.LocalPlayer.PlayerGui.MapGui.Map.Container.ButtonServerBrowser.Visible = true
         wait()
+    end
+end
+
+_G.AFKSpamSnowball = true
+
+function AFKSpamSnowball() 
+    while _G.AFKSpamSnowball == true do 
+        local value1 = 932
+        local playerName = game.Players.LocalPlayer.PlayerGui.PlayerDialogGui.Container.PlayerHeader.PlayerUsername.Text:gsub("@", "")
+        local headPosition = game.Players:FindFirstChild(playerName).Character.Head.Position
+        local value2 = 73
+
+        local args = string.format("[%d, [\"%f\", \"%f\", \"%f\"], [\"%f\", \"%f\", \"%f\"], [\"%f\", \"%f\", \"%f\"], %d]",
+            value1, headPosition.X, headPosition.Y, headPosition.Z, headPosition.X, headPosition.Y, headPosition.Z, headPosition.X, headPosition.Y, headPosition.Z, value2)
+
+        game:GetService("ReplicatedStorage"):WaitForChild("EventConnections"):WaitForChild("ThrowItem"):FireServer(args)
+        task.wait()
     end
 end
 
@@ -530,6 +547,13 @@ local Toggle = AntiSpam:CreateToggle({
    end,
 })
 
+local Button = AntiSpam:CreateButton({
+   Name = "Anti Snowball Screen",
+   Callback = function()
+        game.Players.LocalPlayer.PlayerGui.ThrowingItemGui:Destroy()
+   end,
+})
+
 local Spam = Window:CreateTab("Spam")
 
 local Toggle = Spam:CreateToggle({
@@ -542,6 +566,39 @@ local Toggle = Spam:CreateToggle({
    end,
 })
 
+local Button = Spam:CreateButton({
+   Name = "Snowball",
+   Callback = function()
+        local value1 = 932
+        local playerName = game.Players.LocalPlayer.PlayerGui.PlayerDialogGui.Container.PlayerHeader.PlayerUsername.Text:gsub("@", "")
+        local headPosition = game.Players:FindFirstChild(playerName).Character.Head.Position
+        local value2 = 73
+
+        local args = string.format("[%d, [\"%f\", \"%f\", \"%f\"], [\"%f\", \"%f\", \"%f\"], [\"%f\", \"%f\", \"%f\"], %d]",
+            value1, headPosition.X, headPosition.Y, headPosition.Z, headPosition.X, headPosition.Y, headPosition.Z, headPosition.X, headPosition.Y, headPosition.Z, value2)
+
+        game:GetService("ReplicatedStorage"):WaitForChild("EventConnections"):WaitForChild("ThrowItem"):FireServer(args)
+   end,
+})
+
+local Toggle = Spam:CreateToggle({
+   Name = "AFK Spam Snowball",
+   CurrentValue = false,
+   Flag = "Toggle1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Value)
+        _G.AFKSpamSnowball = Value 
+        AFKSpamSnowball()
+   end,
+})
+
+local Button = Spam:CreateButton({
+    Name = "Spam Teleport Notification",
+    Callback = function()
+        for _, player in pairs(game.Players:GetPlayers()) do
+            game:GetService("ReplicatedStorage").Connection:InvokeServer(154,player.UserId,{})
+        end
+    end,
+ })
 
 local Dev = Window:CreateTab("Dev")
 
@@ -650,6 +707,25 @@ local Button2 = Dev:CreateButton({
     Callback = function()
         if ObjectSerialId then
             game:GetService("ReplicatedStorage").FunctionConnections.RequestEstateEditSendToAttic:InvokeServer(ObjectSerialId)
+        else
+            warn("No Object Serial ID found.")
+        end
+    end,
+})
+
+local Button3 = Dev:CreateButton({
+    Name = "Удалить",
+    Callback = function()
+        if ObjectSerialId then
+            local args = {
+                [1] = 200,
+                [2] = 10001,
+                [3] = ObjectSerialId,
+                [4] = 0
+            }
+
+            game:GetService("ReplicatedStorage"):WaitForChild("Connection"):InvokeServer(unpack(args))
+            
         else
             warn("No Object Serial ID found.")
         end
