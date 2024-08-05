@@ -103,6 +103,14 @@ local function findClosestTempFish(rootPart)
     return closestObject
 end
 
+local function FishingValue()
+    local count: number = 0
+    for _ in pairs(connection:InvokeServer(50)) do
+        count = count + 1
+    end
+    return count
+end
+
 function startAutoFarm()
     connection:InvokeServer(9)
 
@@ -114,17 +122,15 @@ function startAutoFarm()
                 if rootPart then
                     local closestObject = findClosestTempFish(rootPart)
 
-                    if closestObject then
+                    if FishingValue() < 22 then
                         local fishingParams = {
                             Power = 1,
                             FishingZonePos = closestObject.Position,
-                            Face = Vector3.new(0, 0, 0),
-                            PlayerPos = closestObject.Position,
-                            FishingPolePos = closestObject.Position
+                            Face = Vector3.new(0, 0, 0),PlayerPos = closestObject.Position,FishingPolePos = closestObject.Position
                         }
                         connection:InvokeServer(11, fishingParams)
                         connection:InvokeServer(49)
-                        connection:InvokeServer(50)
+                    else
                         connection:InvokeServer(51)
                     end
                 else
@@ -419,6 +425,8 @@ AvatarTab:CreateDropdown({
 
 local AutoFarm = Window:CreateTab("AutoFarm")
 
+FishingLabel = AutoFarm:CreateLabel("Label Example")
+
 AutoFarm:CreateToggle({
     Name = "auto-fishing",
     CurrentValue = false,
@@ -636,209 +644,8 @@ local Toggle = AntiSpam:CreateToggle({
     end,
 })
 
-local Dev = Window:CreateTab("Dev")
-
-local Button = Dev:CreateButton({
-   Name = "Make Offsale Assets Available",
-   Callback = function()
-        for _, shopName in ipairs({"Furniture", "Toys", "HomeImprovement", "PetShop"}) do
-            local shop = require(game:GetService("ReplicatedStorage"):WaitForChild(string.format("Shop_%s", shopName)))
-            shop.Categories[666] = {CategoryId = 666, Image = 5277185610, CatTitle = "offsale ;)"}
-            for _, asset in pairs(shop.Assets) do
-                asset.ForSale, asset.CatId, asset.Desc = true, 666, "This is an offsale item!"
-                asset.Details.Price.HalloweenCandy = nil
-            end
-        end
-   end,
-})
-
--- Создание меток для отображения информации об объекте
-local Label1 = Dev:CreateLabel("Name: ")
-local Label2 = Dev:CreateLabel("Asset ID: ")
-local Label3 = Dev:CreateLabel("Serial ID: ")
-
--- Переменные для хранения информации об объекте
-local ObjectSerialId
-local FPosition
-local FRotation
-
--- Создание полей ввода для позиции и вращения
-local Input1 = Dev:CreateInput({
-    Name = "Position",
-    PlaceholderText = "Enter position (x, y, z)",
-    RemoveTextAfterFocusLost = false,
-    Callback = function(Text)
-        FPosition = Text
-        updateObjectInfo()
-    end,
-})
-
-local Input2 = Dev:CreateInput({
-    Name = "Rotation",
-    PlaceholderText = "Enter rotation value",
-    RemoveTextAfterFocusLost = false,
-    Callback = function(Text)
-        FRotation = tonumber(Text)
-        updateObjectInfo()
-    end,
-})
-
--- Функция для обновления информации об объекте
-local function updateObjectInfo()
-    if FPosition and FRotation and ObjectSerialId then
-        local x, y, z = string.match(FPosition, "([%d%.%-]+), ([%d%.%-]+), ([%d%.%-]+)")
-        x, y, z = tonumber(x), tonumber(y), tonumber(z)
-
-        if x and y and z then
-            local positionVector = Vector3.new(x, y, z)
-            local success, err = pcall(function()
-                game:GetService("ReplicatedStorage"):WaitForChild("EventConnections"):WaitForChild("UpdateEstateEditObject"):FireServer({
-                    {
-                        ["ObjectSerialId"] = ObjectSerialId,
-                        ["NormalFace"] = Vector3.yAxis,
-                        ["FloorLevel"] = 1,
-                        ["RotationValue"] = FRotation,
-                        ["WorldPosition"] = positionVector
-                    }
-                })
-            end)
-
-            if not success then
-                warn("Failed to update object info: " .. err)
-            end
-        else
-            warn("Invalid position format.")
-        end
-    end
+while wait() do
+    FishingLabel:Set(FishingValue())
 end
-
--- Функция для обновления информации о BoomBox
-local function updateBoomBoxInfo(child)
-    if child:GetAttribute("ObjectAssetId") or child:GetAttribute("ObjectSerialId") then
-        Label1:Set("Name: " .. child.Name)
-        Label2:Set("Asset ID: " .. (child:GetAttribute("ObjectAssetId") or "N/A"))
-        ObjectSerialId = child:GetAttribute("ObjectSerialId")
-        Label3:Set("Serial ID: " .. (ObjectSerialId or "N/A"))
-
-        if child:FindFirstChild("ObjectAnchor") then
-            FPosition = tostring(child.ObjectAnchor.Position)
-            Input1:Set(FPosition)
-            FRotation = child.ObjectAnchor.Rotation.X + child.ObjectAnchor.Rotation.Z
-            Input2:Set(tostring(FRotation))
-        end
-    end
-end
-
--- Функция для обработки кликов мыши
-local function onMouseClick(hit, position)
-    local parent = hit.Parent
-    if parent then
-        updateBoomBoxInfo(parent)
-
-        if clickPositionLoggingEnabled then
-            printClickPosition(position)
-        end
-
-        if clickToDeleteEnabled and ObjectSerialId then
-            local success, err = pcall(function()
-                game:GetService("ReplicatedStorage").FunctionConnections.RequestEstateEditSendToAttic:InvokeServer(ObjectSerialId)
-            end)
-
-            if not success then
-                warn("Failed to delete object: " .. err)
-            end
-        end
-    end
-end
-
--- Создание кнопок для обновления и удаления информации об объекте
-local Button1 = Dev:CreateButton({
-    Name = "Обновить",
-    Callback = function()
-        updateObjectInfo()
-    end,
-})
-
-local Button3 = Dev:CreateButton({
-    Name = "Удалить",
-    Callback = function()
-        if ObjectSerialId then
-            local args = {
-                [1] = 200,
-                [2] = 10001,
-                [3] = ObjectSerialId,
-                [4] = 0
-            }
-
-            local success, err = pcall(function()
-                game:GetService("ReplicatedStorage"):WaitForChild("Connection"):InvokeServer(unpack(args))
-            end)
-
-            if not success then
-                warn("Failed to delete object: " .. err)
-            end
-        else
-            warn("No Object Serial ID found.")
-        end
-    end,
-})
-
--- Переменные для отслеживания состояния функционала
-local clickPositionLoggingEnabled = false
-local clickToDeleteEnabled = false
-
--- Функция для печати позиции клика
-local function printClickPosition(position)
-    FPosition = tostring(position)
-    Input1:Set(FPosition)
-    local x, y, z = string.match(FPosition, "([%d%.%-]+), ([%d%.%-]+), ([%d%.%-]+)")
-    x, y, z = tonumber(x), tonumber(y), tonumber(z)
-
-    if x and y and z then
-        local positionVector = Vector3.new(x, y, z)
-        local success, err = pcall(function()
-            game:GetService("ReplicatedStorage"):WaitForChild("EventConnections"):WaitForChild("UpdateEstateEditObject"):FireServer({
-                {
-                    ["ObjectSerialId"] = ObjectSerialId,
-                    ["NormalFace"] = Vector3.yAxis,
-                    ["FloorLevel"] = 1,
-                    ["RotationValue"] = FRotation,
-                    ["WorldPosition"] = positionVector
-                }
-            })
-        end)
-
-        if not success then
-            warn("Failed to print click position: " .. err)
-        end
-    end
-end
-
--- Кнопки переключателей для функционала
-local ToggleButton = Dev:CreateToggle({
-    Name = "Click Tp",
-    Enabled = clickPositionLoggingEnabled,
-    Callback = function(enabled)
-        clickPositionLoggingEnabled = enabled
-    end,
-})
-
-local ClickToDeleteToggle = Dev:CreateToggle({
-    Name = "Click to Delete",
-    Enabled = clickToDeleteEnabled,
-    Callback = function(enabled)
-        clickToDeleteEnabled = enabled
-    end,
-})
-
--- Подключение события клика мыши
-local mouse = game.Players.LocalPlayer:GetMouse()
-mouse.Button1Down:Connect(function()
-    local target = mouse.Target
-    if target then
-        local hitPosition = mouse.Hit.p
-        onMouseClick(target, hitPosition)
-    end
-end)
 
 Rayfield:LoadConfiguration()
